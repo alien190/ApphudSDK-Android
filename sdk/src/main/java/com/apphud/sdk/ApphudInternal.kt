@@ -7,6 +7,7 @@ import android.os.AsyncTask
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import com.android.billingclient.BuildConfig
 import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.Purchase
 import com.android.billingclient.api.SkuDetails
@@ -545,6 +546,7 @@ internal object ApphudInternal {
                         ApphudLog.log("SyncPurchases: Don't send equal purchases from prev state")
                     } else {
                         client.purchased(makeRestorePurchasesBody(restoreStatus.purchases)) { customer, errors ->
+                            Thread.sleep(10000)
                             handler.post {
                                 when (errors) {
                                     null -> {
@@ -580,6 +582,7 @@ internal object ApphudInternal {
             if (!purchases.isNullOrEmpty()) {
                 ApphudLog.log("historyCallback: $purchases")
                 billing.restore(BillingClient.SkuType.SUBS, purchases)
+                Thread.sleep(5000)
                 billing.restore(BillingClient.SkuType.INAPP, purchases)
             }
         }
