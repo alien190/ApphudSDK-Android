@@ -30,6 +30,7 @@ internal class BillingWrapper(context: Context) : BillingClientStateListener, Cl
     private val consume = ConsumeWrapper(billing)
     private val history = HistoryWrapper(billing)
     private val acknowledge = AcknowledgeWrapper(billing)
+
     //Используется кеш на случай, если при попытке восстановить историю клиент еще не запущен
     private val storage = SparseArray<SkuType>(2)
 
@@ -80,9 +81,12 @@ internal class BillingWrapper(context: Context) : BillingClientStateListener, Cl
     fun queryPurchaseHistory(@BillingClient.SkuType type: SkuType) {
         when (billing.isReady) {
             true -> history.queryPurchaseHistory(type)
-            else -> when (type) {
-                BillingClient.SkuType.SUBS  -> storage.put(SUBS_KEY, type)
-                BillingClient.SkuType.INAPP -> storage.put(IN_APP_KEY, type)
+            else -> {
+                when (type) {
+                    BillingClient.SkuType.SUBS -> storage.put(SUBS_KEY, type)
+                    BillingClient.SkuType.INAPP -> storage.put(IN_APP_KEY, type)
+                }
+                history.callback?.invoke(emptyList())
             }
         }
     }
@@ -90,9 +94,11 @@ internal class BillingWrapper(context: Context) : BillingClientStateListener, Cl
     fun details(@BillingClient.SkuType type: SkuType, products: List<ProductId>) =
         details(type = type, products = products, manualCallback = null)
 
-    fun details(@BillingClient.SkuType type: SkuType,
-                products: List<ProductId>,
-                manualCallback: ApphudSkuDetailsCallback? = null) =
+    fun details(
+        @BillingClient.SkuType type: SkuType,
+        products: List<ProductId>,
+        manualCallback: ApphudSkuDetailsCallback? = null
+    ) =
         sku.queryAsync(type = type, products = products, manualCallback = manualCallback)
 
     fun restore(@BillingClient.SkuType type: SkuType, products: List<PurchaseHistoryRecord>) =
